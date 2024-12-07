@@ -11,7 +11,7 @@ const server = http.createServer(app);
 const isDev = process.env.NODE_ENV === "development";
 const allowedOrigin = isDev
   ? "http://localhost:3000" 
-  : process.env.ALLOWED_ORIGIN || "https://som3-1.github.io/global-cursors";
+  : process.env.ALLOWED_ORIGIN;
 
 console.log(allowedOrigin)
 app.use(
@@ -22,7 +22,6 @@ app.use(
   })
 );
 
-// WebSocket setup
 const io = new Server(server, {
   cors: {
     origin: allowedOrigin,
