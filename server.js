@@ -3,48 +3,52 @@ const http = require("http");
 const axios = require("axios");
 const { Server } = require("socket.io");
 const cors = require("cors");
+require("dotenv").config(); 
 
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST"],
-}));
+const isDev = process.env.NODE_ENV === "development";
+const allowedOrigin = isDev ? "http://localhost:3000" : process.env.ALLOWED_ORIGIN;
 
+app.use(
+  cors({
+    origin: allowedOrigin,
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+// WebSocket setup
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: allowedOrigin,
     methods: ["GET", "POST"],
   },
 });
 
-const cursors = {};
-
-// Array of random images for cursors
 const cursorImages = Array.from({ length: 19 }, (_, i) => `/${i + 1}.svg`);
 
-// Fetch user's location and flag
+const cursors = {};
+
 const getUserLocation = async () => {
   try {
     const response = await axios.get("http://ip-api.com/json");
     const { country, countryCode } = response.data;
-    const flag = `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`; // Generate flag URL
+    const flag = `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
     return { country, flag };
   } catch (error) {
     console.error("Error fetching location:", error);
-    return { country: "Unknown", flag: "" }; // Fallback
+    return { country: "Unknown", flag: "" }; 
   }
 };
 
 io.on("connection", async (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // Assign random cursor image and fetch location
   const randomCursorImage = cursorImages[Math.floor(Math.random() * cursorImages.length)];
   const locationData = await getUserLocation();
 
-  // Initialize cursor data for the user
   cursors[socket.id] = {
     name: "",
     cursorImage: randomCursorImage,
@@ -54,9 +58,8 @@ io.on("connection", async (socket) => {
   };
 
   socket.on("cursor-move", (data) => {
-    // Update cursor position and keep other details
     cursors[socket.id] = { ...cursors[socket.id], ...data, lastActive: Date.now() };
-    io.emit("update-cursors", cursors); // Broadcast updated cursors
+    io.emit("update-cursors", cursors); 
   });
 
   const checkInactiveUsers = () => {
@@ -79,7 +82,25 @@ io.on("connection", async (socket) => {
   });
 });
 
-const PORT = 3001;
+app.get("/", (req, res) => {
+  res.send("Global Cursors API is running");
+});
+
+app.get("/cursors", (req, res) => {
+  res.json(cursors);
+});
+
+app.get("/cursor/:id", (req, res) => {
+  const { id } = req.params;
+  if (cursors[id]) {
+    return res.json(cursors[id]);
+  }
+  res.status(404).json({ error: "Cursor not found" });
+});
+
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(
+    `Server running in ${isDev ? "development" : "production"} mode on port ${PORT}`
+  );
 });
