@@ -8,9 +8,11 @@ require("dotenv").config();
 const app = express();
 const server = http.createServer(app);
 
-const isDev = process.env.NODE_ENV === "development";
-const allowedOrigin = isDev ? "http://localhost:3000" : process.env.ALLOWED_ORIGIN;
+const allowedOrigin = isDev
+  ? "http://localhost:3000" 
+  : process.env.ALLOWED_ORIGIN || "https://som3-1.github.io/global-cursors";
 
+console.log(allowedOrigin)
 app.use(
   cors({
     origin: allowedOrigin,
