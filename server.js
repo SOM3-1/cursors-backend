@@ -13,7 +13,7 @@ const allowedOrigin = isDev
   ? "http://localhost:3000" 
   : process.env.ALLOWED_ORIGIN;
 
-  const baseURL = isDev ? "" : process.env.PUBLIC_URL;
+  const baseURL = isDev ? "" : process.env.ALLOWED_ORIGIN;
 
 console.log(allowedOrigin)
 app.use(
