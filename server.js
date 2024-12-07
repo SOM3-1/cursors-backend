@@ -13,6 +13,8 @@ const allowedOrigin = isDev
   ? "http://localhost:3000" 
   : process.env.ALLOWED_ORIGIN;
 
+  const baseURL = isDev ? "" : process.env.PUBLIC_URL;
+
 console.log(allowedOrigin)
 app.use(
   cors({
@@ -29,7 +31,7 @@ const io = new Server(server, {
   },
 });
 
-const cursorImages = Array.from({ length: 19 }, (_, i) => `/${i + 1}.svg`);
+const cursorImages = Array.from({ length: 19 }, (_, i) => `${baseURL}/${i + 1}.svg`);
 
 const cursors = {};
 
